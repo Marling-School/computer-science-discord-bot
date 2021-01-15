@@ -15,11 +15,17 @@ logger.configure({
 const client = new Discord.Client();
 
 client.on('ready', () => {
+
     logger.info('Connected to Discord')
 });
 
-client.on('message', (m) => {
-    logger.info(m.content);
+client.on('message', (msg) => {
+    if (!msg.content.startsWith("!")) return
+    if (msg.author.bot) return;
+
+    logger.info(`Saw a Message: ${msg.content}`);
+
+
 })
 logger.info('Attempting Login with ' + process.env.DISCORD_SECRET)
 
