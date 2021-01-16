@@ -1,8 +1,8 @@
 import { linearSearch, binarySearch } from "comp-sci-maths-lib";
 import { NO_MATCH } from 'comp-sci-maths-lib/dist/algorithms/search/common';
-import { stringComparator } from "comp-sci-maths-lib/dist/common";
-import { PositionVars, SearchFunction } from "comp-sci-maths-lib/dist/types";
+import { SearchFunction } from "comp-sci-maths-lib/dist/types";
 import Discord from "discord.js";
+import { searchUtilitiesWithMsg } from "./common";
 import { MessageHandler } from "./types";
 
 interface SearchHandlers {
@@ -25,16 +25,7 @@ const search: MessageHandler = (msg: Discord.Message, content: string, splitOnSp
 
         const searchHandler: SearchFunction = searchHandlers[searchName]
         if (!!searchHandler) {
-            const found = searchHandler(items, itemToFind, {
-                compare: (a, b) => {
-                    const result = stringComparator(a, b);
-                    msg.channel.send(`Comparing ${a} with ${b}`)
-                    return result
-                },
-                observe: (stageName: string, positionVars?: PositionVars) => {
-                    msg.channel.send(`Observing ${stageName} Position Variables are: ${JSON.stringify(positionVars)}`)
-                }
-            });
+            const found = searchHandler(items, itemToFind, searchUtilitiesWithMsg(msg));
 
             if (found === NO_MATCH) {
                 msg.channel.send(new Discord.MessageEmbed()

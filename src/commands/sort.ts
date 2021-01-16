@@ -1,8 +1,7 @@
 import { bubbleSort, quickSort, mergeSort, insertionSort } from "comp-sci-maths-lib";
 import { CustomisableSortFunction } from "comp-sci-maths-lib/dist/algorithms/sort/types";
-import { simpleSwap, stringComparator } from "comp-sci-maths-lib/dist/common";
-import { PositionVars } from "comp-sci-maths-lib/dist/types";
 import Discord from "discord.js";
+import { sortUtilitiesWithMsg } from "./common";
 import { MessageHandler } from "./types";
 
 interface SortHandlers {
@@ -27,20 +26,7 @@ const sort: MessageHandler = (msg: Discord.Message, content: string, splitOnSpac
 
         const sortHandler: CustomisableSortFunction<any> = sortHandlers[sortName]
         if (!!sortHandler) {
-            const sorted = sortHandler(items, {
-                compare: (a, b) => {
-                    const result = stringComparator(a, b);
-                    msg.channel.send(`Comparing ${a} with ${b} to give ${result}`)
-                    return result;
-                },
-                swap: (arr, from, to) => {
-                    msg.channel.send(`Swapping item [${from}] with [${to}]`)
-                    simpleSwap(arr, from, to);
-                },
-                observe: (stageName: string, data: string[], positionVars: PositionVars) => {
-                    msg.channel.send(`Observing ${stageName} with data:${data}, Position Variables are: ${JSON.stringify(positionVars)}`)
-                }
-            });
+            const sorted = sortHandler(items, sortUtilitiesWithMsg(msg));
 
             msg.channel.send(new Discord.MessageEmbed()
                 .setColor(0x00ff00)
