@@ -1,4 +1,5 @@
 import { linearSearch, binarySearch } from "comp-sci-maths-lib";
+import { NO_MATCH } from 'comp-sci-maths-lib/dist/algorithms/search/common';
 import { stringComparator } from "comp-sci-maths-lib/dist/common";
 import { PositionVars, SearchFunction } from "comp-sci-maths-lib/dist/types";
 import Discord from "discord.js";
@@ -14,33 +15,44 @@ const searchHandlers: SearchHandlers = {
 }
 
 const search: MessageHandler = (msg: Discord.Message, content: string, splitOnSpace: string[]) => {
-    const messages: string[] = [];
-
     if (splitOnSpace.length > 3) {
-        const [_, searchName, itemToFind, ...itemsToSearchThrough] = splitOnSpace;
+        const [_, searchName, itemToFind, ...items] = splitOnSpace;
+
+        msg.channel.send(new Discord.MessageEmbed()
+            .setColor(0xff0000)
+            .setTitle(`Sorting using ${searchName}`)
+            .setDescription(`Searching for ${itemToFind} in ${items}`));
 
         const searchHandler: SearchFunction = searchHandlers[searchName]
         if (!!searchHandler) {
-            const found = searchHandler(itemsToSearchThrough, itemToFind, {
+            const found = searchHandler(items, itemToFind, {
                 compare: (a, b) => {
                     const result = stringComparator(a, b);
-                    messages.push(`Comparing ${a} with ${b}`)
+                    msg.channel.send(`Comparing ${a} with ${b}`)
                     return result
                 },
                 observe: (stageName: string, positionVars?: PositionVars) => {
-                    messages.push(`Observing ${stageName} Position Variables are: ${JSON.stringify(positionVars)}`)
+                    msg.channel.send(`Observing ${stageName} Position Variables are: ${JSON.stringify(positionVars)}`)
                 }
             });
 
-            messages.push(`Found ${found}`);
+            if (found === NO_MATCH) {
+                msg.channel.send(new Discord.MessageEmbed()
+                    .setColor(0xff0000)
+                    .setTitle('Search Complete')
+                    .setDescription(`Could not find ${itemToFind} in ${items}`));
+            } else {
+                msg.channel.send(new Discord.MessageEmbed()
+                    .setColor(0x00ff00)
+                    .setTitle("Search Complete")
+                    .setDescription(`Found ${itemToFind} at ${found} in ${items}`));
+            }
         } else {
-            messages.push(`Unknown sorting algorithm ${searchName}, options are ${Object.keys(searchHandlers)}`)
+            msg.channel.send(`Unknown sorting algorithm ${searchName}, options are ${Object.keys(searchHandlers)}`)
         }
     } else {
-        messages.push('Not enough parts to the command to sort')
+        msg.channel.send('Not enough parts to the command to sort')
     }
-
-    msg.channel.send(messages.join('\n'))
 }
 
 export default search;
