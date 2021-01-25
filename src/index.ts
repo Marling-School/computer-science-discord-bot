@@ -23,7 +23,7 @@ client.on('ready', () => {
 });
 
 client.on('message', (msg) => {
-    if (!msg.content.startsWith("!")) return
+    if (!msg.content.startsWith(";")) return
     if (msg.author.bot) return;
 
     logger.info(`Saw a Message: ${msg.content}`);
