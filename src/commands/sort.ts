@@ -25,12 +25,19 @@ const createSortObsMessage = (items: string[], observation: SortStage<string>): 
                 .setTitle('Sorting')
                 .setDescription(observation.stageName)
                 .addField('Items', items.join(', '))
+                .addField('Sorting Items', observation.data.join(', '))
             if (Object.keys(observation.positionVars).length > 0) {
                 msg.addField('Position Variables', Object.entries(observation.positionVars).map(([name, value]) => `${name}=${value}`).join(' '));
             }
             return msg;
         }
         case SortStageType.compare: {
+            let comparisonSymbol = "=";
+            if (observation.result < 0) {
+                comparisonSymbol = "<";
+            } else if (observation.result > 0) {
+                comparisonSymbol = ">";
+            }
             const msg: MessageEmbed = new MessageEmbed()
                 .setColor(0x00ff00)
                 .setTitle('Sorting')
@@ -39,12 +46,17 @@ const createSortObsMessage = (items: string[], observation: SortStage<string>): 
                 .addFields([
                     {
                         name: 'a',
-                        value: observation.aIndex,
+                        value: `[${observation.aIndex}]=${observation.a}`,
                         inline: true,
                     },
                     {
+                        name: 'Result',
+                        value: comparisonSymbol,
+                        inline: true
+                    },
+                    {
                         name: 'b',
-                        value: observation.aIndex,
+                        value: `[${observation.bIndex}]=${observation.b}`,
                         inline: true,
                     }
                 ])
@@ -59,12 +71,12 @@ const createSortObsMessage = (items: string[], observation: SortStage<string>): 
                 .addFields([
                     {
                         name: 'From',
-                        value: observation.from,
+                        value: `[${observation.from}]`,
                         inline: true,
                     },
                     {
                         name: 'To',
-                        value: observation.to,
+                        value: `[${observation.to}]`,
                         inline: true,
                     }
                 ])
