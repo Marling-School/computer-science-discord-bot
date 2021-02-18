@@ -1,11 +1,12 @@
 import { linearSearch, binarySearch } from "comp-sci-maths-lib";
 import { NO_MATCH } from 'comp-sci-maths-lib/dist/algorithms/search/common';
 import { SearchFunction, SearchUtilities } from "comp-sci-maths-lib/dist/types";
-import { Message, MessageEmbed, MessageReaction, User } from "discord.js";
+import { Message, MessageEmbed } from "discord.js";
 import { MessageHandler, SearchObservation } from "./types";
 import {
     stringComparator,
 } from "comp-sci-maths-lib/dist/common";
+import playable from './playable';
 
 interface SearchHandlers {
     [s: string]: SearchFunction;
@@ -16,11 +17,6 @@ const searchHandlers: SearchHandlers = {
     'binary': binarySearch
 }
 
-const BACK_START = '⏪';
-const BACK_STEP = '◀️';
-const FORWARD_STEP = '▶️';
-const FORWARD_END = '⏩';
-const PLAY_CONTROLS = [BACK_START, BACK_STEP, FORWARD_STEP, FORWARD_END];
 
 const createSearchObsMessage = (items: string[], itemToFind: string, observation: SearchObservation): MessageEmbed => {
     const msg: MessageEmbed = new MessageEmbed()
@@ -85,43 +81,16 @@ const search: MessageHandler = async (msg: Message, content: string, splitOnSpac
         },
     });
 
-    let observationIndex = 0;
-    const liveMessage = await msg.channel.send(createSearchObsMessage(items, itemToFind, stages[observationIndex]));
-
-    // Setup the play controls
-    PLAY_CONTROLS.forEach(async p => await liveMessage.react(p));
-
-    // Listen for those controls
-    const filter = (reaction: MessageReaction, user: User) => {
-        return PLAY_CONTROLS.includes(reaction.emoji.name) && user.id === msg.author.id;
-    };
-
-    const collector = liveMessage.createReactionCollector(filter, { time: 150000 });
-
-    collector.on('collect', (reaction: MessageReaction, user: User) => {
-        reaction.users.remove(user.id);
-
-        switch (reaction.emoji.name) {
-            case BACK_START:
-                observationIndex = 0;
-                break;
-            case BACK_STEP:
-                if (observationIndex > 0) {
-                    observationIndex -= 1;
-                }
-                break;
-            case FORWARD_STEP:
-                if (observationIndex < (stages.length - 1)) {
-                    observationIndex += 1;
-                }
-                break;
-            case FORWARD_END:
-                observationIndex = stages.length - 1;
-                break;
+    playable({
+        items: stages,
+        originalMsg: msg,
+        createEmbedMessage: (stage) => {
+            return createSearchObsMessage(items, itemToFind, stage)
+        },
+        finished: () => {
+            msg.channel.send(`Finished searching for ${itemToFind} in ${items.join(', ')}, matchIndex=${matchIndex}`)
         }
-
-        liveMessage.edit(createSearchObsMessage(items, itemToFind, stages[observationIndex]));
-    });
+    })
 }
 
 export default search;
